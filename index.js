@@ -18,7 +18,7 @@ module.exports = {
             try{
             if(!key) return errorMsg(`You didn't provide a Pastebin API Key`)
             if(!id) return errorMsg(`You didn't provide a paste ID!`);
-            let {body} = await get(`${baseURL}/bin/api/${id}`).set('key', key).catch(() => {});
+            let body = await getAPIResponse(`/bin/api/${id}`, key)
             if(!body) return errorMsg(`No response from the Pastebin API`);
             return body;
             }catch(err){
@@ -74,7 +74,7 @@ module.exports = {
             try{
                 if(!key) return errorMsg("You didn't provide a API Key!")
                 if(!image) return errorMsg(`You didn't provide an image endpoint, ex: 'cats', 'pugs', 'dogs'`);
-                let {body} = await get(`${baseURL}/api/photos/${image}`).set("key", key).catch(() => {});
+                let body = await getAPIResponse(`/api/photos/${image}`, key)
                 if(!body) return errorMsg(`Unknown error while trying to fetch the image from the API`);
                 return body;
             }catch(err){
@@ -85,7 +85,7 @@ module.exports = {
             try{
                 if(!key) return errorMsg("You didn't provide a API Key!")
                 if(!image) return errorMsg(`You didn't provide an special endpoint`);
-                let {body} = await get(`${baseURL}/api/special?type=${image}`).set("key", key).catch(() => {});
+                let body = await getAPIResponse(`/api/special?type=${image}`, key)
                 if(!body) return errorMsg(`Unknown error while trying to fetch the image from the API`);
                 return body;
             }catch(err){
@@ -97,7 +97,7 @@ module.exports = {
                 if(!key) return errorMsg(`You didn't provide a API Key`);
                 if(!toLang) return errorMsg(`You didn't provide the 'to' language!`);
                 if(!text) return errorMsg(`You didn't provide any text!`);
-                let {body} = await get(`${baseURL}/api/translate?to=${toLang}&key=${key}&text=${text}`).catch(() => {});
+                let body = await getAPIResponse(`/api/translate?to=${toLang}&text=${text}`, key)
                 if(!body) return errorMsg(`Unknown error while trying to fetch the translation from the API`);
                 return body;
             }catch(err){
@@ -108,7 +108,7 @@ module.exports = {
             try{
                 if(!key) return errorMsg(`You didn't provide a API Key`);
                 if(!type) type = "both";
-                let {body} = await get(`${baseURL}/api/invites?type=${type.toLowerCase()}`).set('key', key).catch(() => {});
+                let body = await getAPIResponse(`/api/invites?type=${type.toLowerCase()}`, key);
                 if(!body) return errorMsg(`Unknown error while trying to fetch the invites from the API`)
                 return body;
             }catch(err){
@@ -119,7 +119,7 @@ module.exports = {
             try{
                 if(!key) return errorMsg(`You didn't provide a API Key`);
                 if(!type) type = "random";
-                let {body} = await get(`${baseURL}/api/facts?type=${type.toLowerCase()}`).set('key', key).catch(() => {});
+                let body = await getAPIResponse(`/api/facts?type=${type.toLowerCase()}`, key)
                 if(!body) return errorMsg(`Unknown error while trying to fetch the fact(s) from the API`)
                 return body;
             }catch(err){
@@ -129,7 +129,7 @@ module.exports = {
         ball: async (key) => {
             try{
                 if(!key) return errorMsg(`You didn't provide a API Key`);
-                let {body} = await get(`${baseURL}/api/8ball`).set('key', key).catch(() => {});
+                let body = await getAPIResponse(`/api/8ball`, key)
                 if(!body) return errorMsg(`Unknown error while trying to fetch 8ball from the API`)
                 return body;
             }catch(err){
@@ -141,7 +141,7 @@ module.exports = {
                 if(!key) return errorMsg(`You didn't provide a API Key`);
                 if(!type) type = "";
                 if(!breed) breed = "none";
-                let {body} = await get(`${baseURL}/api/dogbreed?type=${type}&breed=${breed}`).set('key', key).catch(() => {});
+                let body = await getAPIResponse(`/api/dogbreed?type=${type}&breed=${breed}`, key)
                 if(!body) return errorMsg(`Unable to fetch the dog-breed from the API site!`);
                 return body;
             }catch(err){
@@ -152,7 +152,7 @@ module.exports = {
             try{
                 if(!key) return errorMsg(`You didn't provide a API Key`);
                 if(!name) return errorMsg(`You didn't provide a npm package name!`);
-                let {body} = await get(`${baseURL}/api/npm?name=${name}`).set('key', key).catch(() => {});
+                let body = await getAPIResponse(`/api/npm?name=${name}`, key);
                 if(!body) return errorMsg(`Unable to fetch the npm package from the API site!`);
                 return body;
             }catch(err){
