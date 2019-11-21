@@ -1,0 +1,17 @@
+{
+  "name": "elara-services",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "elara-services"
+  ],
+  "author": "Elara-Discord-Bots",
+  "license": "MIT",
+  "dependencies": {
+    "superagent": "^5.1.0"
+  }
+}
