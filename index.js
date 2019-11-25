@@ -1,5 +1,4 @@
-const {get, post} = require('superagent'), 
-      baseURL = `https://services.superchiefyt.tk`;
+const {get, post} = require('superagent'), baseURL = `https://services.superchiefyt.tk`;
 
 function errorMsg (msg) {
     return {status: false, message: msg};
@@ -30,10 +29,40 @@ module.exports = {
             if(!key) return errorMsg(`You didn't provide a Pastebin API Key`);
             if(!content) return errorMsg(`You didn't provide any content to post to the pastebin API`);
             if(!title) title = null;
-            if(typeof public !== "boolean") privatePaste = false;
+            if(typeof privatePaste !== "boolean") privatePaste = false;
             let {body} = await post(`${baseURL}/bin/api`).set('key', key).send({content: content, priv: privatePaste, title: title}).catch(() => {});
             if(!body) return errorMsg(`No response from the Pastebin API!`);
             return body;
+            }catch(err){
+                return errorMsg(err.message);
+            }
+        }
+    },
+    haste: {
+        get: async (id, url = `https://haste.superchiefyt.tk/`) => {
+            try{
+            if(!id) return errorMsg(`You didn't provide a paste ID!`);
+            let {body} = await get(`${url}/documents/${id}`)
+            if(!body) return errorMsg(`No response from the hastebin website.`);
+            return body;
+            }catch(err){
+                return errorMsg(err.message);
+            }
+        },
+        post: async (content, options = {}) => {
+            try{
+            if (typeof options === "string") options = { url: "https://haste.superchiefyt.tk", extension: options };
+            const url = "url" in options ? options.url : "https://haste.superchiefyt.tk";
+            const extension = "extension" in options ? options.extension : "js";
+            if(!content) return errorMsg(`You didn't provide any content!`)
+            let {body} = await post(`${url}/documents`).send(content)
+            if(!body) return errorMsg(`No response from the hastebin website.`);
+            let info = {
+                status: true,
+                id: body.key,
+                url: `${url}/${body.key}.${extension}`
+            }
+            return info;
             }catch(err){
                 return errorMsg(err.message);
             }
