@@ -1,14 +1,14 @@
 {
   "name": "elara-services",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "The Official Elara Services API Wrapper.",
   "main": "services.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "SUPERCHIEFYT (Elara-Discord-Bots)",
-  "homepage": "https://services.superchiefyt.tk/site/docs",
-  "license": "ISC",
+  "homepage": "https://services.superchiefyt.tk",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Elara-Discord-Bots/Elara-Services.git"
