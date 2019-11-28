@@ -1,17 +1,18 @@
 {
   "name": "elara-services",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "1.0.2",
+  "description": "The Official Elara Services API Wrapper.",
+  "main": "services.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [
-    "elara-services"
-  ],
-  "author": "Elara-Discord-Bots",
-  "license": "MIT",
+  "author": "SUPERCHIEFYT (Elara-Discord-Bots)",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Elara-Discord-Bots/Elara-Services.git"
+  },
   "dependencies": {
-    "superagent": "^5.1.0"
+    "superagent": "^5.1.1"
   }
 }
