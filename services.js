@@ -1,15 +1,12 @@
-const {get, post} = require('superagent'), baseURL = `https://services.superchiefyt.tk`;
-
-function errorMsg (msg) {
-    return {status: false, message: msg};
-}
-
-async function getAPIResponse(url, key){
-    let {body} = await get(`${baseURL}${url}`).set('key', key).catch(() => {});
-    if(!body) return null;
-    return body;
-}
-
+const {get, post} = require('superagent'), 
+      baseURL = `https://services.superchiefyt.tk`, 
+      errorMsg = (msg) => {return {status: false, message: msg}},
+      getAPIResponse = async (url, key) => {
+        let body = await get(`${baseURL}${url}`).set('key', key).catch(() => {});
+        if(!body) return null;
+        if(!body.body) return null;
+        return body.body;
+      };
 module.exports = {
     support: `${baseURL}/site/support`,
     paste: {
@@ -155,6 +152,17 @@ module.exports = {
                 return errorMsg(err.message);
             }
         },
+        memes: async (key, clean = false) => {
+            try{
+                if(!key) return errorMsg(`You didn't provide a API Key!`);
+                if(!["true", "false"].includes(clean.toString().toLowerCase())) return errorMsg(`The 'clean' you provided is invalid, it has to be a boolean.`)
+                let res = await getAPIResponse(`/api/photos/memes?clean=${clean}`, key);
+                if(!res) return errorMsg(`I was unable to fetch the meme :(`);
+                return res;
+            }catch(err){
+                return errorMsg(err.message);
+            }
+        },
         ball: async (key) => {
             try{
                 if(!key) return errorMsg(`You didn't provide a API Key`);
@@ -186,6 +194,34 @@ module.exports = {
                 return body;
             }catch(err){
                 return errorMsg(err.message);
+            }
+        },
+        time: async (key, place, all = false) => {
+            try{
+                if(!key) return errorMsg(`You didn't provide a API key`);
+                if(typeof all !== "boolean") return errorMsg(`'all' isn't a boolean!`)
+                if(all === true) {
+                    let body = await getAPIResponse(`/api/time?all=true`, key);
+                    if(!body) return errorMsg(`Unable to fetch the times list!`);
+                    return body;
+                }
+                if(!place) return errorMsg(`You didn't provide a place!`);
+                let body = await getAPIResponse(`/api/time?place=${place.toString().toLowerCase()}`, key);
+                if(!body) return errorMsg(`Unable to fetch the info for ${place}`);
+                return body;
+            }catch(err){
+                return errorMsg(err.message)
+            }
+        },
+        docs: async (key, search, project = "stable", branch = "stable") => {
+            try{
+                if(!key) return errorMsg(`You didn't provide a API Key!`);
+                if(!search) return errorMsg(`Well tell me what you want to search for?`);
+                let body = await getAPIResponse(`/api/discord.js-docs?search=${search}&project=${project}&branch=${branch}`, key);
+                if(!body) return errorMsg(`I was unable to fetch the docs infomration`);
+                return body;
+            }catch(err){
+                return errorMsg(err.message)
             }
         },
         platform: {
