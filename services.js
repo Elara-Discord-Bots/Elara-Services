@@ -9,6 +9,11 @@ const {get, post} = require('superagent'),
       };
 module.exports = {
     support: `${baseURL}/site/support`,
+    ping: async () => {
+        let res = await getAPIResponse(`/site/ping`, "no-key");
+        if(!res) return {status: false, message: "I was unable to fetch the site ping!"};
+        return res;
+    },
     paste: {
         get: async (key, id) => {
             try{
@@ -329,6 +334,32 @@ module.exports = {
                     if(!type) type = "video";
                     let res = await getAPIResponse(`/api/platform/yt-search?token=${token}&name=${name}&type=${type}`, key);
                     if(!res) return errorMsg(`Unable to fetch the ytsearch information, try again later.`);
+                    return res;
+                }catch(err){
+                    return errorMsg(err.message);
+                }
+            }
+        }
+    },
+    dev: {
+        blacklists: {
+            servers: async (key, id = "all") => {
+                try{
+                    if(!key) return errorMsg(`You didn't provide the developer API key`);
+                    if(!id) return errorMsg(`You didn't provide a Discord server ID!`);
+                    let res = await getAPIResponse(`/dev/blacklists/servers?id=${id}`, key);
+                    if(!res) return errorMsg(`I was unable to fetch the blacklisted servers.`);
+                    return res;
+                }catch(err){
+                    return errorMsg(err.message);
+                }
+            },
+            users: async (key, id = "all") => {
+                try{
+                    if(!key) return errorMsg(`You didn't provide the developer API key`);
+                    if(!id) return errorMsg(`You didn't provide a Discord user ID!`);
+                    let res = await getAPIResponse(`/dev/blacklists/users?id=${id}`, key);
+                    if(!res) return errorMsg(`I was unable to fetch the blacklisted users.`);
                     return res;
                 }catch(err){
                     return errorMsg(err.message);
