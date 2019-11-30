@@ -92,9 +92,10 @@ module.exports = {
                     if(!servers) return errorMsg(`You didn't provide 'servers' number!`);
                     if(!shards) shards = 0;
                     if(isNaN(servers)) return errorMsg(`The 'servers' number value isn't valid!`);
-                    if(isNaN(shards)) return errorMsg(`The 'shards' number value isn't valid!`)
-                    let {body} = await get(`${baseURL}/api/dbl/post?id=${id}`).set('token', token).set("key", key).send({servers: servers, shards: shards}).catch(() => {});
-                    if(!body) return errorMsg(`Unknown error while trying to fetch the image from the API`);
+                    if(isNaN(shards)) return errorMsg(`The 'shards' number value isn't valid!`);
+                    let body = await getAPIResponse(`/api/dbl/post?id=${id}&servers=${servers}&shards=${shards}&token=${token}`, key);
+                    if(!body) return errorMsg(`Unknown error while trying to post the stats to DBL(top.gg)`);
+                    if(body.status !== true) return errorMsg(body.message)
                     return body;
                 }catch(err){
                     return errorMsg(err.message)
