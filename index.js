@@ -87,7 +87,7 @@ module.exports = class ServiceClient{
                     try{
                         if(!token) return errorMsg(`You didn't provide a Discord Bot List(top.gg) token!`);
                         if(!id) return errorMsg(`You didn't provide a Discord Bot or User ID`);
-                        let {body} = await get(`${baseURL}/api/dbl/stats?id=${id}`).set('token', token).set("key", key).catch(() => {});
+                        let body = await getAPIResponse(`/api/dbl/stats?id=${id}&token=${token}`);
                         if(!body) return errorMsg(`Unknown error while trying to fetch the image from the API`);
                         return body;
                     }catch(err){
