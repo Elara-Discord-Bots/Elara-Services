@@ -25,7 +25,7 @@ module.exports = class ServiceClient{
             let res = await getAPIResponse(`/site/ping`);
                 if(!res) return {status: false, message: "I was unable to fetch the site ping!"};
                 return res;
-        }
+        };
         this.support = `${baseURL}/site/support`;
         this.paste = {
             get: async (id) => {
@@ -50,7 +50,7 @@ module.exports = class ServiceClient{
                     return errorMsg(err.message);
                 }
             }
-        },
+        };
         this.haste = {
             get: async (id, url = `https://haste.superchiefyt.tk/`) => {
                 try{
@@ -80,7 +80,7 @@ module.exports = class ServiceClient{
                     return errorMsg(err.message);
                 }
             }
-        },
+        };
         this.api = {
             dbl: {
                 get: async (token, id) => {
@@ -116,6 +116,16 @@ module.exports = class ServiceClient{
                     if(!image) return errorMsg(`You didn't provide an image endpoint, ex: 'cats', 'pugs', 'dogs'`);
                     let body = await getAPIResponse(`/api/photos/${image}`)
                     if(!body) return errorMsg(`Unknown error while trying to fetch the image from the API`);
+                    return body;
+                }catch(err){
+                    return errorMsg(err.message)
+                }
+            },
+            math: async (problem) => {
+                try{
+                    if(!problem) return errorMsg(`You didn't provide a math problem`);
+                    let body = await getAPIResponse(`/api/math?problem=${problem}`)
+                    if(!body) return errorMsg(`Unknown error while trying to fetch the math problem from the API`);
                     return body;
                 }catch(err){
                     return errorMsg(err.message)
@@ -330,30 +340,58 @@ module.exports = class ServiceClient{
                     }
                 }
             }
-        },
+        };
         this.dev = {
             blacklists: {
-                servers: async (id = "all") => {
+                servers: async (id = "all", type = "list", data = {name: "", reason: "", mod: ""}) => {
                     try{
                         if(!id) return errorMsg(`You didn't provide a Discord server ID!`);
-                        let res = await getAPIResponse(`/dev/blacklists/servers?id=${id}`);
-                        if(!res) return errorMsg(`I was unable to fetch the blacklisted servers.`);
-                        return res;
+                        switch(type.toLowerCase()){
+                            case "add":
+                                let ares = await getAPIResponse(`/dev/blacklists/servers?id=${id}&action=add&name=${encodeURIComponent(data.name)}&reason=${encodeURIComponent(data.reason)}&mod=${encodeURIComponent(data.mod)}`);
+                                if(!ares) return errorMsg(`I was unable to add the server to the blacklisted database!`);
+                                return ares;
+                            break;
+                            case "delete": case "remove":
+                                let dr = await getAPIResponse(`/dev/blacklists/servers?id=${id}&action=remove&name=${data.name}&reason=${encodeURIComponent(data.reason)}&mod=${encodeURIComponent(data.mod)}`);
+                                if(!dr) return errorMsg(`I was unable to remove the server to the blacklisted database!`);
+                                return dr;
+                            break;
+                            case "list":
+                            let ls = await getAPIResponse(`/dev/blacklists/servers?id=${id}`);
+                            if(!ls) return errorMsg(`I was unable to fetch the blacklisted servers.`);
+                            return ls;
+                            break;
+                        }
                     }catch(err){
                         return errorMsg(err.message);
                     }
                 },
-                users: async (id = "all") => {
+                users: async (id = "all", type = "list", data = {username: "", tag: "", reason: "", mod: ""}) => {
                     try{
                         if(!id) return errorMsg(`You didn't provide a Discord user ID!`);
-                        let res = await getAPIResponse(`/dev/blacklists/users?id=${id}`);
-                        if(!res) return errorMsg(`I was unable to fetch the blacklisted users.`);
-                        return res;
+                        switch(type.toLowerCase()){
+                            case "add":
+                                let ur = await getAPIResponse(`/dev/blacklists/users?id=${id}&action=add&username=${encodeURIComponent(data.username)}&tag=${encodeURIComponent(data.tag)}&reason=${encodeURIComponent(data.reason)}&mod=${encodeURIComponent(data.mod)}`);
+                                if(!ur) return errorMsg(`I was unable to add the user to the blacklisted database!`);
+                                return ur;
+                            break;
+                            case "delete": case "remove":
+                                let ed = await getAPIResponse(`/dev/blacklists/users?id=${id}&action=remove&reason=${encodeURIComponent(data.reason)}&mod=${encodeURIComponent(data.mod)}`);
+                                if(!ed) return errorMsg(`I was unable to remove the user to the blacklisted database!`);
+                                return ed;
+                            break;
+                            case "list":
+                            let lu = await getAPIResponse(`/dev/blacklists/users?id=${id}`);
+                            if(!lu) return errorMsg(`I was unable to fetch the blacklisted users.`);
+                            return lu;
+                            break;
+                        }
                     }catch(err){
                         return errorMsg(err.message);
                     }
                 }
             }
-        }
+        };
     };
-}
+};
