@@ -12,7 +12,7 @@ module.exports = class ServiceClient{
    * @param {string} key API Key
    * @param {ServiceOptions} [options] Client options
    */
-    constructor(key, baseURL = "https://services.superchiefyt.tk"){
+    constructor(key, baseURL = "https://elara-services.glitch.me"){
         if(!key) throw new Error(`You didn't provide an API key!`);
         if(typeof key !== "string") throw new Error(`The API key you provided isn't a string!`);
         async function getAPIResponse(url){
@@ -57,7 +57,12 @@ module.exports = class ServiceClient{
                 if(!id) return errorMsg(`You didn't provide a paste ID!`);
                 let {body} = await get(`${url}/documents/${id}`)
                 if(!body) return errorMsg(`No response from the hastebin website.`);
-                return body;
+                return {
+                    status: true,
+                    id: body.key,
+                    content: body.data,
+                    key: `${url}/${body.key}`
+                }
                 }catch(err){
                     return errorMsg(err.message);
                 }
@@ -109,6 +114,19 @@ module.exports = class ServiceClient{
                     }catch(err){
                         return errorMsg(err.message)
                     }
+                }
+            },
+            imagemod: async (token, urls = [], percent = 89) => {
+                try{
+                    if(!token) return errorMsg(`You didn't provide a moderatecontent API Key!`);
+                    if(!Array.isArray(urls)) return errorMsg(`The "urls" you provided wasn't an array!`);
+                    if(urls.length === 0) return errorMsg(`You didn't provide images to check!`); 
+                    let res = await get(`${baseURL}/api/imagemod?key=${key}&token=${token}&percent=${percent}`).send({images: urls});
+                    if(res.status !== 200) return errorMsg(`I was unable to fetch the imagemod information.`);
+                    if(!res.body) return errorMsg(`Unknown error while trying to fetch the imagemod information from the API`);
+                    return res.body;
+                }catch(err){
+                    return errorMsg(err.message);
                 }
             },
             photos: async (image) => {
