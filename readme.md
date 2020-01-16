@@ -1,3 +1,3 @@
-#The Elara Services API Wrapper
+# The Elara Services API Wrapper
 
-This is a work in progress read me.. just explore the package to know what is included in it <3
+To view all of the endpoints view: https://elara.gitbook.io/services 💖
