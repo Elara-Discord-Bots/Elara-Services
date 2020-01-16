@@ -27,6 +27,7 @@ module.exports = class ServiceClient{
                 return res;
         };
         this.support = `${baseURL}/site/support`;
+        this.docs = "https://elara.gitbook.io/services/wrapper/js";
         this.paste = {
             get: async (id) => {
                 try{
