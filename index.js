@@ -117,19 +117,6 @@ module.exports = class ServiceClient{
                     }
                 }
             },
-            imagemod: async (token, urls = [], percent = 89) => {
-                try{
-                    if(!token) return errorMsg(`You didn't provide a moderatecontent API Key!`);
-                    if(!Array.isArray(urls)) return errorMsg(`The "urls" you provided wasn't an array!`);
-                    if(urls.length === 0) return errorMsg(`You didn't provide images to check!`); 
-                    let res = await get(`${baseURL}/api/imagemod?key=${key}&token=${token}&percent=${percent}`).send({images: urls});
-                    if(res.status !== 200) return errorMsg(`I was unable to fetch the imagemod information.`);
-                    if(!res.body) return errorMsg(`Unknown error while trying to fetch the imagemod information from the API`);
-                    return res.body;
-                }catch(err){
-                    return errorMsg(err.message);
-                }
-            },
             photos: async (image) => {
                 try{
                     if(!image) return errorMsg(`You didn't provide an image endpoint, ex: 'cats', 'pugs', 'dogs'`);
@@ -142,8 +129,14 @@ module.exports = class ServiceClient{
             },
             math: async (problem) => {
                 try{
+                    async function getAPIResponseSendBody(url, thing = {}){
+                        let body = await get(`${baseURL}${url}`).set('key', key).send(thing).catch(() => {});
+                        if(!body) return null;
+                        if(!body.body) return null;
+                        return body.body;
+                    }
                     if(!problem) return errorMsg(`You didn't provide a math problem`);
-                    let body = await getAPIResponse(`/api/math?problem=${problem}`)
+                    let body = await getAPIResponseSendBody(`/api/math`, {problem: problem})
                     if(!body) return errorMsg(`Unknown error while trying to fetch the math problem from the API`);
                     return body;
                 }catch(err){
@@ -357,6 +350,60 @@ module.exports = class ServiceClient{
                     }catch(err){
                         return errorMsg(err.message);
                     }
+                },
+                picarto: async (nameOrID) => {
+                    try{
+                        if(!nameOrID) return errorMsg(`You didn't provide a Picarto ID or name`);
+                        let res = await getAPIResponse(`/api/platform/picarto?search=${nameOrID}`);
+                        if(!res) return errorMsg(`Unable to fetch the Picarto information, try again later.`);
+                        return res;
+                    }catch(err){
+                        return errorMsg(err.message);
+                    }
+                }
+            }
+        };
+        this.automod = {
+            images: async (token, urls = [], percent = 89) => {
+                try{
+                    if(!token) return errorMsg(`You didn't provide a moderatecontent API Key!`);
+                    if(!Array.isArray(urls)) return errorMsg(`The "urls" you provided wasn't an array!`);
+                    if(urls.length === 0) return errorMsg(`You didn't provide images to check!`); 
+                    let res = await get(`${baseURL}/api/automod/images?key=${key}&token=${token}&percent=${percent}`).send({images: urls});
+                    if(res.status !== 200) return errorMsg(`I was unable to fetch the imagemod information.`);
+                    if(!res.body) return errorMsg(`Unknown error while trying to fetch the imagemod information from the API`);
+                    return res.body;
+                }catch(err){
+                    return errorMsg(err.message);
+                }
+            },
+            words: async (message, filteredWords = [], filterEmojis = []) => {
+                try{
+                    if(!message || message.toString().length === 0) return errorMsg(`You didn't provide a message`);
+                    let res = await get(`${baseURL}/api/automod/words?key=${key}`).send({
+                        words: filteredWords,
+                        emojis: filterEmojis
+                    });
+                    if(res.status !== 200) return errorMsg(`I couldn't fetch the API response`);
+                    if(!res.body) return errorMsg(`I was unable to fetch the API response`);
+                    if(res.body.status !== true) return errorMsg(res.body.message);
+                    return res.body;
+                }catch(err){
+                    return errorMsg(err.message);
+                }
+            },
+            links: async (message) => {
+                try{
+                    if(!message || message.toString().length === 0) return errorMsg(`You didn't provide a message.`);
+                    let res = await get(`${baseURL}/api/automod/links?key=${key}`).send({
+                        message: message
+                    });
+                    if(res.status !== 200) return errorMsg(`I was unable to fetch the API response.`);
+                    if(!res.body) return errorMsg(`I was unable to fetch the API response`);
+                    if(res.body.status !== true) return errorMsg(res.body.message);
+                    return res.body;
+                }catch(err){
+                    return errorMsg(err.message);
                 }
             }
         };
