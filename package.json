@@ -1,6 +1,6 @@
 {
   "name": "elara-services",
-  "version": "1.1.9",
+  "version": "1.2.3",
   "description": "The Official Elara Services API Wrapper.",
   "main": "index.js",
   "scripts": {
