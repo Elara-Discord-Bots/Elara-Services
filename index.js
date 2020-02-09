@@ -20,7 +20,8 @@ module.exports = class ServiceClient{
             if(!body) return null;
             if(!body.body) return null;
             return body.body;
-        }
+        };
+        
         this.ping = async () => {
             let res = await getAPIResponse(`/site/ping`);
                 if(!res) return {status: false, message: "I was unable to fetch the site ping!"};
@@ -155,9 +156,15 @@ module.exports = class ServiceClient{
             },
             translate: async (toLang, text) => {
                 try{
+                    async function getAPIResponseSendBody(url, thing = {}){
+                        let body = await get(`${baseURL}${url}`).set('key', key).send(thing).catch(() => {});
+                        if(!body) return null;
+                        if(!body.body) return null;
+                        return body.body;
+                    };
                     if(!toLang) return errorMsg(`You didn't provide the 'to' language!`);
                     if(!text) return errorMsg(`You didn't provide any text!`);
-                    let body = await getAPIResponse(`/api/translate?to=${toLang}&text=${text}`)
+                    let body = await getAPIResponseSendBody(`/api/translate`, {to: toLang, text: text});
                     if(!body) return errorMsg(`Unknown error while trying to fetch the translation from the API`);
                     return body;
                 }catch(err){
