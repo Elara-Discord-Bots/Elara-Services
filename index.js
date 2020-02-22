@@ -400,11 +400,13 @@ module.exports = class ServiceClient{
                     return errorMsg(err.message);
                 }
             },
-            links: async (message) => {
+            links: async (message, options = {prefix: null, regexp: true}) => {
                 try{
                     if(!message || message.toString().length === 0) return errorMsg(`You didn't provide a message.`);
                     let res = await get(`${baseURL}/api/automod/links?key=${key}`).send({
-                        message: message
+                        message: message,
+                        regexp: options.regexp,
+                        prefix: options.prefix
                     });
                     if(res.status !== 200) return errorMsg(`I was unable to fetch the API response.`);
                     if(!res.body) return errorMsg(`I was unable to fetch the API response`);
