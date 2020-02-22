@@ -388,6 +388,7 @@ module.exports = class ServiceClient{
                 try{
                     if(!message || message.toString().length === 0) return errorMsg(`You didn't provide a message`);
                     let res = await get(`${baseURL}/api/automod/words?key=${key}`).send({
+                        message: message,
                         words: filteredWords,
                         emojis: filterEmojis
                     });
