@@ -54,7 +54,7 @@ module.exports = class ServiceClient{
             }
         };
         this.haste = {
-            get: async (id, url = `https://haste.superchiefyt.tk/`) => {
+            get: async (id, url = `https://haste.superchiefyt.xyz/`) => {
                 try{
                 if(!id) return errorMsg(`You didn't provide a paste ID!`);
                 let {body} = await get(`${url}/documents/${id}`)
@@ -71,8 +71,8 @@ module.exports = class ServiceClient{
             },
             post: async (content, options = {}) => {
                 try{
-                if (typeof options === "string") options = { url: "https://haste.superchiefyt.tk", extension: options };
-                const url = "url" in options ? options.url : "https://haste.superchiefyt.tk";
+                if (typeof options === "string") options = { url: "https://haste.superchiefyt.xyz", extension: options };
+                const url = "url" in options ? options.url : "https://haste.superchiefyt.xyz";
                 const extension = "extension" in options ? options.extension : "js";
                 if(!content) return errorMsg(`You didn't provide any content!`)
                 let {body} = await post(`${url}/documents`).send(content)
