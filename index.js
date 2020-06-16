@@ -57,7 +57,7 @@ module.exports = class ServiceClient{
             get: async (id, url = `https://haste.superchiefyt.xyz/`) => {
                 try{
                 if(!id) return errorMsg(`You didn't provide a paste ID!`);
-                let {body} = await get(`${url}/documents/${id}`)
+                let {body} = await get(`${url}/documents/${id}`).set("User-Agent", `Elara-Services (1.2.7, https://github.com/elara-bots/Elara-Services)`)
                 if(!body) return errorMsg(`No response from the hastebin website.`);
                 return {
                     status: true,
@@ -75,7 +75,7 @@ module.exports = class ServiceClient{
                 const url = "url" in options ? options.url : "https://haste.superchiefyt.xyz";
                 const extension = "extension" in options ? options.extension : "js";
                 if(!content) return errorMsg(`You didn't provide any content!`)
-                let {body} = await post(`${url}/documents`).send(content)
+                let {body} = await post(`${url}/documents`).set("User-Agent", `Elara-Services (1.2.7, https://github.com/elara-bots/Elara-Services)`).send(content)
                 if(!body) return errorMsg(`No response from the hastebin website.`);
                 let info = {
                     status: true,
