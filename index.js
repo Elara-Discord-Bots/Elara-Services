@@ -1,6 +1,6 @@
 const {get, post} = require('superagent'), 
-      errorMsg = (msg) => {return {status: false, message: msg}};
-
+      errorMsg = (msg) => {return {status: false, message: msg}},
+      userAgent = `Elara-Services (${require("./package.json").version}, https://github.com/elara-bots/Elara-Services)`
 module.exports = class ServiceClient{
       /**
    * @typedef {Object} ServiceOptions
@@ -16,7 +16,7 @@ module.exports = class ServiceClient{
         if(!key) throw new Error(`You didn't provide an API key!`);
         if(typeof key !== "string") throw new Error(`The API key you provided isn't a string!`);
         async function getAPIResponse(url){
-            let body = await get(`${baseURL}${url}`).set({'key': key, "User-Agent": `Elara-Services (1.2.7, https://github.com/elara-bots/Elara-Services)`}).catch(() => {});
+            let body = await get(`${baseURL}${url}`).set({'key': key, "User-Agent": userAgent}).catch(() => {});
             if(!body) return null;
             if(!body.body) return null;
             return body.body;
@@ -45,7 +45,7 @@ module.exports = class ServiceClient{
                 if(!content) return errorMsg(`You didn't provide any content to post to the pastebin API`);
                 if(!title) title = null;
                 if(typeof privatePaste !== "boolean") privatePaste = false;
-                let {body} = await post(`${baseURL}/bin/api`).set({'key': key, "User-Agent": `Elara-Services (1.2.7, https://github.com/elara-bots/Elara-Services)`}).send({content: content, priv: privatePaste, title: title}).catch(() => {});
+                let {body} = await post(`${baseURL}/bin/api`).set({'key': key, "User-Agent": userAgent}).send({content: content, priv: privatePaste, title: title}).catch(() => {});
                 if(!body) return errorMsg(`No response from the Pastebin API!`);
                 return body;
                 }catch(err){
@@ -57,7 +57,7 @@ module.exports = class ServiceClient{
             get: async (id, url = `https://haste.superchiefyt.xyz/`) => {
                 try{
                 if(!id) return errorMsg(`You didn't provide a paste ID!`);
-                let {body} = await get(`${url}/documents/${id}`).set("User-Agent", `Elara-Services (1.2.7, https://github.com/elara-bots/Elara-Services)`)
+                let {body} = await get(`${url}/documents/${id}`).set("User-Agent", userAgent)
                 if(!body) return errorMsg(`No response from the hastebin website.`);
                 return {
                     status: true,
@@ -75,7 +75,7 @@ module.exports = class ServiceClient{
                 const url = "url" in options ? options.url : "https://haste.superchiefyt.xyz";
                 const extension = "extension" in options ? options.extension : "js";
                 if(!content) return errorMsg(`You didn't provide any content!`)
-                let {body} = await post(`${url}/documents`).set("User-Agent", `Elara-Services (1.2.7, https://github.com/elara-bots/Elara-Services)`).send(content)
+                let {body} = await post(`${url}/documents`).set("User-Agent", userAgent).send(content)
                 if(!body) return errorMsg(`No response from the hastebin website.`);
                 let info = {
                     status: true,
@@ -131,7 +131,7 @@ module.exports = class ServiceClient{
             math: async (problem) => {
                 try{
                     async function getAPIResponseSendBody(url, thing = {}){
-                        let body = await get(`${baseURL}${url}`).set({'key': key, "User-Agent": `Elara-Services (1.2.7, https://github.com/elara-bots/Elara-Services)`}).send(thing).catch(() => {});
+                        let body = await get(`${baseURL}${url}`).set({'key': key, "User-Agent": userAgent}).send(thing).catch(() => {});
                         if(!body) return null;
                         if(!body.body) return null;
                         return body.body;
@@ -157,7 +157,7 @@ module.exports = class ServiceClient{
             translate: async (toLang, text) => {
                 try{
                     async function getAPIResponseSendBody(url, thing = {}){
-                        let body = await get(`${baseURL}${url}`).set({'key': key, "User-Agent": `Elara-Services (1.2.7, https://github.com/elara-bots/Elara-Services)`}).send(thing).catch(() => {});
+                        let body = await get(`${baseURL}${url}`).set({'key': key, "User-Agent": userAgent}).send(thing).catch(() => {});
                         if(!body) return null;
                         if(!body.body) return null;
                         return body.body;
@@ -376,7 +376,7 @@ module.exports = class ServiceClient{
                     if(!token) return errorMsg(`You didn't provide a moderatecontent API Key!`);
                     if(!Array.isArray(urls)) return errorMsg(`The "urls" you provided wasn't an array!`);
                     if(urls.length === 0) return errorMsg(`You didn't provide images to check!`); 
-                    let res = await get(`${baseURL}/api/automod/images?token=${token}&percent=${percent}`).set({'key': key, "User-Agent": `Elara-Services (1.2.7, https://github.com/elara-bots/Elara-Services)`}).send({images: urls});
+                    let res = await get(`${baseURL}/api/automod/images?token=${token}&percent=${percent}`).set({'key': key, "User-Agent": userAgent}).send({images: urls});
                     if(res.status !== 200) return errorMsg(`I was unable to fetch the imagemod information.`);
                     if(!res.body) return errorMsg(`Unknown error while trying to fetch the imagemod information from the API`);
                     return res.body;
@@ -387,7 +387,7 @@ module.exports = class ServiceClient{
             words: async (message, filteredWords = [], filterEmojis = []) => {
                 try{
                     if(!message || message.toString().length === 0) return errorMsg(`You didn't provide a message`);
-                    let res = await get(`${baseURL}/api/automod/words`).set({'key': key, "User-Agent": `Elara-Services (1.2.7, https://github.com/elara-bots/Elara-Services)`}).send({
+                    let res = await get(`${baseURL}/api/automod/words`).set({'key': key, "User-Agent": userAgent}).send({
                         message: message,
                         words: filteredWords,
                         emojis: filterEmojis
@@ -403,7 +403,7 @@ module.exports = class ServiceClient{
             links: async (message, options = {prefix: null, regexp: true}) => {
                 try{
                     if(!message || message.toString().length === 0) return errorMsg(`You didn't provide a message.`);
-                    let res = await get(`${baseURL}/api/automod/links`).set({'key': key, "User-Agent": `Elara-Services (1.2.7, https://github.com/elara-bots/Elara-Services)`}).send({
+                    let res = await get(`${baseURL}/api/automod/links`).set({'key': key, "User-Agent": userAgent}).send({
                         message: message,
                         regexp: options.regexp,
                         prefix: options.prefix
