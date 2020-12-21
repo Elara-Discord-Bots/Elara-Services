@@ -12,7 +12,7 @@ module.exports = class ServiceClient{
    * @param {string} key API Key
    * @param {ServiceOptions} [options] Client options
    */
-    constructor(key, baseURL = "https://services.superchiefyt.xyz"){
+    constructor(key, baseURL = "https://my.elara.services"){
         if(!key) throw new Error(`You didn't provide an API key!`);
         if(typeof key !== "string") throw new Error(`The API key you provided isn't a string!`);
         async function getAPIResponse(url){
