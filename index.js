@@ -1,473 +1,448 @@
-const {get, post} = require('superagent'), 
-      errorMsg = (msg) => {return {status: false, message: msg}},
-      userAgent = `Elara-Services (${require("./package.json").version}, https://github.com/elara-bots/Elara-Services)`
-module.exports = class ServiceClient{
-      /**
-   * @typedef {Object} ServiceOptions
-   * @property {String} [url] Base URL for the service
-   * @memberof ServiceClient
-   */
+const { get, post } = require('superagent'), 
+        userAgent = `Elara-Services (${require("./package.json").version}, https://github.com/elara-bots/Elara-Services)`;
 
-  /**
-   * @param {string} key API Key
-   * @param {ServiceOptions} [options] Client options
-   */
+module.exports = class Services{
     constructor(key, baseURL = "https://my.elara.services"){
         if(!key) throw new Error(`You didn't provide an API key!`);
         if(typeof key !== "string") throw new Error(`The API key you provided isn't a string!`);
-        async function getAPIResponse(url){
-            let body = await get(`${baseURL}${url}`).set({'key': key, "User-Agent": userAgent}).catch(() => {});
-            if(!body) return null;
-            if(!body.body) return null;
-            return body.body;
-        };
-        
-        this.ping = async () => {
-            let res = await getAPIResponse(`/site/ping`);
-                if(!res) return {status: false, message: "I was unable to fetch the site ping!"};
-                return res;
-        };
-        this.support = `${baseURL}/site/support`;
+        this.baseURL = baseURL;
+        /** @private */
+        this.key = key;
+        this.support = `${baseURL}/support`;
         this.docs = "https://elara.gitbook.io/services/wrapper/js";
-        this.paste = {
-            get: async (id) => {
+    };
+    async fetch(url, send = null) {
+        let { body } = await get(`${this.baseURL}${url}`)
+            .set({ 'key': this.key, "User-Agent": userAgent })
+            .send(send)
+            .catch(() => ({ body: null }));
+        if(!body) return null;
+        return body;
+    };
+
+    async ping() {
+        let res = await this.fetch("/site/ping");
+        if(!res) return this.send(`I was unable to fetch the site ping!`);
+        return res;
+    };
+
+    get haste() {
+        return {
+            get: async (id, url = `https://haste.elara.services`) => {
                 try{
-                if(!id) return errorMsg(`You didn't provide a paste ID!`);
-                let body = await getAPIResponse(`/bin/api/${id}`)
-                if(!body) return errorMsg(`No response from the Pastebin API`);
-                return body;
-                }catch(err){
-                    return errorMsg(err.message);
-                }
-            },
-            post: async (title, content, privatePaste = false) => {
-                try{
-                if(!content) return errorMsg(`You didn't provide any content to post to the pastebin API`);
-                if(!title) title = null;
-                if(typeof privatePaste !== "boolean") privatePaste = false;
-                let {body} = await post(`${baseURL}/bin/api`).set({'key': key, "User-Agent": userAgent}).send({content: content, priv: privatePaste, title: title}).catch(() => {});
-                if(!body) return errorMsg(`No response from the Pastebin API!`);
-                return body;
-                }catch(err){
-                    return errorMsg(err.message);
-                }
-            }
-        };
-        this.haste = {
-            get: async (id, url = `https://haste.superchiefyt.xyz/`) => {
-                try{
-                if(!id) return errorMsg(`You didn't provide a paste ID!`);
+                if(!id) return this.send(`You didn't provide a paste ID!`);
                 let {body} = await get(`${url}/documents/${id}`).set("User-Agent", userAgent)
-                if(!body) return errorMsg(`No response from the hastebin website.`);
-                return {
-                    status: true,
-                    id: body.key,
-                    content: body.data,
-                    key: `${url}/${body.key}`
-                }
+                if(!body) return this.send(`No response from the hastebin website.`);
+                return { status: true, id: body.key, content: body.data, key: `${url}/${body.key}` }
                 }catch(err){
-                    return errorMsg(err.message);
+                    return this.send(err.message);
                 }
             },
             post: async (content, options = {}) => {
                 try{
-                if (typeof options === "string") options = { url: "https://haste.superchiefyt.xyz", extension: options };
-                const url = "url" in options ? options.url : "https://haste.superchiefyt.xyz";
-                const extension = "extension" in options ? options.extension : "js";
-                if(!content) return errorMsg(`You didn't provide any content!`)
-                let {body} = await post(`${url}/documents`).set("User-Agent", userAgent).send(content)
-                if(!body) return errorMsg(`No response from the hastebin website.`);
-                let info = {
-                    status: true,
-                    id: body.key,
-                    url: `${url}/${body.key}.${extension}`
-                }
-                return info;
+                    if (typeof options === "string") options = { url: "https://haste.elara.services", extension: options };
+                    const url = "url" in options ? options.url : "https://haste.elara.services";
+                    const extension = "extension" in options ? options.extension : "js";
+                    if(!content) return this.send(`You didn't provide any content!`)
+                    let { body } = await post(`${url}/documents`)
+                        .set("User-Agent", userAgent)
+                        .send(content)
+                        .catch(() => ({ body: null }))
+                    if(!body) return this.send(`No response from the hastebin website.`);
+                    return { status: true, id: body.key, url: `${url}/${body.key}.${extension}` };
                 }catch(err){
-                    return errorMsg(err.message);
+                    return this.send(err.message);
                 }
             }
-        };
-        this.api = {
+        }
+    };
+
+    get paste() {
+        return {
+            get: async (id) => {
+                try{
+                    if(!id) return this.send(`You didn't provide a paste ID!`);
+                    let body = await this.fetch(`/bin/api/${id}`)
+                    if(!body) return this.send(`No response from the Pastebin API`);
+                    return body;
+                }catch(err){
+                    return this.send(err.message);
+                }
+            },
+            post: async (title = null, content, privatePaste = false) => {
+                try{
+                if(!content) return this.send(`You didn't provide any content to post to the pastebin API`);
+                if(typeof privatePaste !== "boolean") privatePaste = false;
+                let { body } = await post(`${this.baseURL}/bin/api`)
+                    .set({ 'key': key, "User-Agent": userAgent })
+                    .send({ content, title, priv: privatePaste })
+                    .catch(() => {});
+                if(!body) return this.send(`No response from the Pastebin API!`);
+                return body;
+                }catch(err){
+                    return this.send(err.message);
+                }
+            }
+        }
+    };
+
+    get api() {
+        return {
             dbl: {
                 get: async (token, id) => {
                     try{
-                        if(!token) return errorMsg(`You didn't provide a Discord Bot List(top.gg) token!`);
-                        if(!id) return errorMsg(`You didn't provide a Discord Bot or User ID`);
-                        let body = await getAPIResponse(`/api/dbl/stats?id=${id}&token=${token}`);
-                        if(!body) return errorMsg(`Unknown error while trying to fetch the image from the API`);
+                        if(!token) return this.send(`You didn't provide a Discord Bot List(top.gg) token!`);
+                        if(!id) return this.send(`You didn't provide a Discord Bot or User ID`);
+                        let body = await this.fetch(`/api/dbl/stats?id=${id}&token=${token}`);
+                        if(!body) return this.send(`Unknown error while trying to fetch the image from the API`);
                         return body;
                     }catch(err){
-                        return errorMsg(err.message)
+                        return this.send(err.message)
                     }
                 },
                 post: async (token, id, servers, shards = 0) => {
                     try{
-                        if(!token) return errorMsg(`You didn't provide a Discord Bot List(top.gg) token!`);
-                        if(!id) return errorMsg(`You didn't provide a Discord Bot or User ID`);
-                        if(!servers) return errorMsg(`You didn't provide 'servers' number!`);
-                        if(!shards) shards = 0;
-                        if(isNaN(servers)) return errorMsg(`The 'servers' number value isn't valid!`);
-                        if(isNaN(shards)) return errorMsg(`The 'shards' number value isn't valid!`);
-                        let body = await getAPIResponse(`/api/dbl/post?id=${id}&servers=${servers}&shards=${shards}&token=${token}`);
-                        if(!body) return errorMsg(`Unknown error while trying to post the stats to DBL(top.gg)`);
-                        if(body.status !== true) return errorMsg(body.message)
+                        if(!token) return this.send(`You didn't provide a Discord Bot List(top.gg) token!`);
+                        if(!id) return this.send(`You didn't provide a Discord Bot or User ID`);
+                        if(!servers) return this.send(`You didn't provide 'servers' number!`);
+                        if(isNaN(servers)) return this.send(`The 'servers' number value isn't valid!`);
+                        if(isNaN(shards)) return this.send(`The 'shards' number value isn't valid!`);
+                        let body = await this.fetch(`/api/dbl/post?id=${id}&servers=${servers}&shards=${shards}&token=${token}`);
+                        if(!body) return this.send(`Unknown error while trying to post the stats to DBL(top.gg)`);
+                        if(body.status !== true) return this.send(body.message)
                         return body;
                     }catch(err){
-                        return errorMsg(err.message)
+                        return this.send(err.message)
                     }
                 }
             },
             photos: async (image) => {
                 try{
-                    if(!image) return errorMsg(`You didn't provide an image endpoint, ex: 'cats', 'pugs', 'dogs'`);
-                    let body = await getAPIResponse(`/api/photos/${image}`)
-                    if(!body) return errorMsg(`Unknown error while trying to fetch the image from the API`);
+                    if(!image) return this.send(`You didn't provide an image endpoint, ex: 'cats', 'pugs', 'dogs'`);
+                    let body = await this.fetch(`/api/photos/${image}`)
+                    if(!body) return this.send(`Unknown error while trying to fetch the image from the API`);
                     return body;
                 }catch(err){
-                    return errorMsg(err.message)
+                    return this.send(err.message)
                 }
             },
             math: async (problem) => {
                 try{
-                    async function getAPIResponseSendBody(url, thing = {}){
-                        let body = await get(`${baseURL}${url}`).set({'key': key, "User-Agent": userAgent}).send(thing).catch(() => {});
-                        if(!body) return null;
-                        if(!body.body) return null;
-                        return body.body;
-                    }
-                    if(!problem) return errorMsg(`You didn't provide a math problem`);
-                    let body = await getAPIResponseSendBody(`/api/math`, {problem: problem})
-                    if(!body) return errorMsg(`Unknown error while trying to fetch the math problem from the API`);
+                    if(!problem) return this.send(`You didn't provide a math problem`);
+                    let body = await this.fetch(`/api/math`, { problem })
+                    if(!body) return this.send(`Unknown error while trying to fetch the math problem from the API`);
                     return body;
                 }catch(err){
-                    return errorMsg(err.message)
+                    return this.send(err.message)
                 }
             },
             special: async (image) => {
                 try{
-                    if(!image) return errorMsg(`You didn't provide an special endpoint`);
-                    let body = await getAPIResponse(`/api/special?type=${image}`)
-                    if(!body) return errorMsg(`Unknown error while trying to fetch the image from the API`);
+                    if(!image) return this.send(`You didn't provide an special endpoint`);
+                    let body = await this.fetch(`/api/special?type=${image}`)
+                    if(!body) return this.send(`Unknown error while trying to fetch the image from the API`);
                     return body;
                 }catch(err){
-                    return errorMsg(err.message)
+                    return this.send(err.message)
                 }
             },
-            translate: async (toLang, text) => {
+            translate: async (to, text) => {
                 try{
-                    async function getAPIResponseSendBody(url, thing = {}){
-                        let body = await get(`${baseURL}${url}`).set({'key': key, "User-Agent": userAgent}).send(thing).catch(() => {});
-                        if(!body) return null;
-                        if(!body.body) return null;
-                        return body.body;
-                    };
-                    if(!toLang) return errorMsg(`You didn't provide the 'to' language!`);
-                    if(!text) return errorMsg(`You didn't provide any text!`);
-                    let body = await getAPIResponseSendBody(`/api/translate`, {to: toLang, text: text});
-                    if(!body) return errorMsg(`Unknown error while trying to fetch the translation from the API`);
+                    if(!to) return this.send(`You didn't provide the 'to' language!`);
+                    if(!text) return this.send(`You didn't provide any text!`);
+                    let body = await this.fetch(`/api/translate`, { to, text });
+                    if(!body) return this.send(`Unknown error while trying to fetch the translation from the API`);
                     return body;
                 }catch(err){
-                    return errorMsg(err.message);
+                    return this.send(err.message);
                 }
             },
             invites: async (type) => {
                 try{
                     if(!type) type = "both";
-                    let body = await getAPIResponse(`/api/invites?type=${type.toLowerCase()}`);
-                    if(!body) return errorMsg(`Unknown error while trying to fetch the invites from the API`)
+                    let body = await this.fetch(`/api/invites?type=${type.toLowerCase()}`);
+                    if(!body) return this.send(`Unknown error while trying to fetch the invites from the API`)
                     return body;
                 }catch(err){
-                    return errorMsg(err.message);
+                    return this.send(err.message);
                 }
             },
             facts: async (type) => {
                 try{
                     if(!type) type = "random";
-                    let body = await getAPIResponse(`/api/facts?type=${type.toLowerCase()}`)
-                    if(!body) return errorMsg(`Unknown error while trying to fetch the fact(s) from the API`)
+                    let body = await this.fetch(`/api/facts?type=${type.toLowerCase()}`)
+                    if(!body) return this.send(`Unknown error while trying to fetch the fact(s) from the API`)
                     return body;
                 }catch(err){
-                    return errorMsg(err.message);
+                    return this.send(err.message);
                 }
             },
             memes: async (clean = false) => {
                 try{
-                    if(!["true", "false"].includes(clean.toString().toLowerCase())) return errorMsg(`The 'clean' you provided is invalid, it has to be a boolean.`)
-                    let res = await getAPIResponse(`/api/photos/memes?clean=${clean}`);
-                    if(!res) return errorMsg(`I was unable to fetch the meme :(`);
+                    if(!["true", "false"].includes(clean.toString().toLowerCase())) return this.send(`The 'clean' you provided is invalid, it has to be a boolean.`)
+                    let res = await this.fetch(`/api/photos/memes?clean=${clean}`);
+                    if(!res) return this.send(`I was unable to fetch the meme :(`);
                     return res;
                 }catch(err){
-                    return errorMsg(err.message);
+                    return this.send(err.message);
                 }
             },
             ball: async () => {
                 try{
-                    let body = await getAPIResponse(`/api/8ball`)
-                    if(!body) return errorMsg(`Unknown error while trying to fetch 8ball from the API`)
+                    let body = await this.fetch(`/api/8ball`)
+                    if(!body) return this.send(`Unknown error while trying to fetch 8ball from the API`)
                     return body;
                 }catch(err){
-                    return errorMsg(err.message);
+                    return this.send(err.message);
                 }
             },
             dogbreed: async (type, breed) => {
                 try{
                     if(!type) type = "";
                     if(!breed) breed = "none";
-                    let body = await getAPIResponse(`/api/dogbreed?type=${type}&breed=${breed}`)
-                    if(!body) return errorMsg(`Unable to fetch the dog-breed from the API site!`);
+                    let body = await this.fetch(`/api/dogbreed?type=${type}&breed=${breed}`)
+                    if(!body) return this.send(`Unable to fetch the dog-breed from the API site!`);
                     return body;
                 }catch(err){
-                    return errorMsg(err.message);
+                    return this.send(err.message);
                 }
             },
             npm: async (name) => {
                 try{
-                    if(!name) return errorMsg(`You didn't provide a npm package name!`);
-                    let body = await getAPIResponse(`/api/npm?name=${name}`);
-                    if(!body) return errorMsg(`Unable to fetch the npm package from the API site!`);
+                    if(!name) return this.send(`You didn't provide a npm package name!`);
+                    let body = await this.fetch(`/api/npm?name=${name}`);
+                    if(!body) return this.send(`Unable to fetch the npm package from the API site!`);
                     return body;
                 }catch(err){
-                    return errorMsg(err.message);
+                    return this.send(err.message);
                 }
             },
             time: async (place, all = false) => {
                 try{
-                    if(typeof all !== "boolean") return errorMsg(`'all' isn't a boolean!`)
+                    if(typeof all !== "boolean") return this.send(`'all' isn't a boolean!`)
                     if(all === true) {
-                        let body = await getAPIResponse(`/api/time?all=true`);
-                        if(!body) return errorMsg(`Unable to fetch the times list!`);
+                        let body = await this.fetch(`/api/time?all=true`);
+                        if(!body) return this.send(`Unable to fetch the times list!`);
                         return body;
                     }
-                    if(!place) return errorMsg(`You didn't provide a place!`);
-                    let body = await getAPIResponse(`/api/time?place=${place.toString().toLowerCase()}`);
-                    if(!body) return errorMsg(`Unable to fetch the info for ${place}`);
+                    if(!place) return this.send(`You didn't provide a place!`);
+                    let body = await this.fetch(`/api/time?place=${place.toString().toLowerCase()}`);
+                    if(!body) return this.send(`Unable to fetch the info for ${place}`);
                     return body;
                 }catch(err){
-                    return errorMsg(err.message)
+                    return this.send(err.message)
                 }
             },
             docs: async (search, project = "stable", branch = "stable") => {
                 try{
-                    if(!search) return errorMsg(`Well tell me what you want to search for?`);
-                    let body = await getAPIResponse(`/api/discord.js-docs?search=${search}&project=${project}&branch=${branch}`);
-                    if(!body) return errorMsg(`I was unable to fetch the docs infomration`);
+                    if(!search) return this.send(`Well tell me what you want to search for?`);
+                    let body = await this.fetch(`/api/discord.js-docs?search=${search}&project=${project}&branch=${branch}`);
+                    if(!body) return this.send(`I was unable to fetch the docs infomration`);
                     return body;
                 }catch(err){
-                    return errorMsg(err.message)
+                    return this.send(err.message)
                 }
             },
             platform: {
-                mixer: async (name) => {
-                    try{
-                        if(!name) return errorMsg(`You didn't provide a mixer username`);
-                        let res = await getAPIResponse(`/api/platform/mixer?user=${name}`);
-                        if(!res) return errorMsg(`Unable to fetch the mixer information from the API site`);
-                        return res;
-                    }catch(err){
-                        return errorMsg(err.message);
-                    }
-                },
                 ytstats: async (token, IDOrName) => {
                     try{
-                        if(!token) return errorMsg(`You didn't provide a youtube API key`);
-                        if(!IDOrName) return errorMsg(`You didnt provide a channel ID or name!`);
-                        let res = await getAPIResponse(`/api/platform/yt-stats?user=${IDOrName}&token=${token}`);
-                        if(!res) return errorMsg(`Unable to fetch the ytstats information from the API site`);
+                        if(!token) return this.send(`You didn't provide a youtube API key`);
+                        if(!IDOrName) return this.send(`You didnt provide a channel ID or name!`);
+                        let res = await this.fetch(`/api/platform/yt-stats?user=${IDOrName}&token=${token}`);
+                        if(!res) return this.send(`Unable to fetch the ytstats information from the API site`);
                         return res;
                     }catch(err){
-                        return errorMsg(err.message);
+                        return this.send(err.message);
                     }
                 },
                 twitch: async (token, name) => {
                     try{
-                        if(!token) return errorMsg(`You didn't provide a twitch API key`);
-                        if(!name) return errorMsg(`You didnt provide a channel name!`);
-                        let res = await getAPIResponse(`/api/platform/twitch?user=${name}&token=${token}`);
-                        if(!res) return errorMsg(`Unable to fetch the twitch information from the API site`);
+                        if(!token) return this.send(`You didn't provide a twitch API key`);
+                        if(!name) return this.send(`You didnt provide a channel name!`);
+                        let res = await this.fetch(`/api/platform/twitch?user=${name}&token=${token}`);
+                        if(!res) return this.send(`Unable to fetch the twitch information from the API site`);
                         return res;
                     }catch(err){
-                        return errorMsg(err.message);
+                        return this.send(err.message);
                     }
                 },
                 roblox: async (id) => {
                     try{
-                        if(!id) return errorMsg(`You didn't provide a Discord user ID`);
-                        let res = await getAPIResponse(`/api/platform/roblox?id=${id}`);
-                        if(!res) return errorMsg(`Unable to fetch the roblox information from the API site`);
+                        if(!id) return this.send(`You didn't provide a Discord user ID`);
+                        let res = await this.fetch(`/api/platform/roblox?id=${id}`);
+                        if(!res) return this.send(`Unable to fetch the roblox information from the API site`);
                         return res;
                     }catch(err){
-                        return errorMsg(err.message);
+                        return this.send(err.message);
                     }
                 },
                 robloxgroup: async (id) => {
                     try{
-                        if(!id) return errorMsg(`You didn't provide a roblox group ID`);
-                        let res = await getAPIResponse(`/api/platform/roblox-group?id=${id}`);
-                        if(!res) return errorMsg(`Unable to fetch the roblox group information from the API site`);
+                        if(!id) return this.send(`You didn't provide a roblox group ID`);
+                        let res = await this.fetch(`/api/platform/roblox-group?id=${id}`);
+                        if(!res) return this.send(`Unable to fetch the roblox group information from the API site`);
                         return res;
                     }catch(err){
-                        return errorMsg(err.message);
+                        return this.send(err.message);
                     }
                 },
                 fortnite: async (token, name, platform = "pc") => {
                     try{
-                        if(!token) return errorMsg(`You didn't provide a Fortnite API key`);
-                        if(!name) return errorMsg(`You didn't provide a username!`);
+                        if(!token) return this.send(`You didn't provide a Fortnite API key`);
+                        if(!name) return this.send(`You didn't provide a username!`);
                         if(!platform) platform = "pc";
-                        let res = await getAPIResponse(`/api/platform/fortnite?user=${name}&token=${token}&platform=${platform}`);
-                        if(!res) return errorMsg(`Unable to fetch the fortnite information from the API site`);
+                        let res = await this.fetch(`/api/platform/fortnite?user=${name}&token=${token}&platform=${platform}`);
+                        if(!res) return this.send(`Unable to fetch the fortnite information from the API site`);
                         return res;
                     }catch(err){
-                        return errorMsg(err.message);
+                        return this.send(err.message);
                     }
                 },
                 paladins: async (devID, auth, username, platform = "pc") => {
                     try{
-                        if(!devID) return errorMsg(`You didn't provide the 'devID'`);
-                        if(!auth) return errorMsg(`You didn't provide the 'auth'`)
-                        if(!username) return errorMsg(`You didn't provide a username!`);
+                        if(!devID) return this.send(`You didn't provide the 'devID'`);
+                        if(!auth) return this.send(`You didn't provide the 'auth'`)
+                        if(!username) return this.send(`You didn't provide a username!`);
                         if(!platform) platform = "pc";
-                        let res = await getAPIResponse(`/api/platform/paladins?devID=${devID}&auth=${auth}&platform=${platform}&user=${username}`);
-                        if(!res) return errorMsg(`Nothing found for that user!`);
+                        let res = await this.fetch(`/api/platform/paladins?devID=${devID}&auth=${auth}&platform=${platform}&user=${username}`);
+                        if(!res) return this.send(`Nothing found for that user!`);
                         return res;
                     }catch(err){
-                        return errorMsg(err.message);
+                        return this.send(err.message);
                     }
                 },
                 imdb: async (token, show) => {
                     try{
-                        if(!token) return errorMsg(`You didn't provide a 'imdb' API key!`)
-                        if(!show) return errorMsg(`You didn't provide the tv-show or movie name!`);
-                        let res = await getAPIResponse(`/api/platform/imdb?token=${token}&show=${show}`);
-                        if(!res) return errorMsg(`Unable to fetch the imdb information, try again later.`);
+                        if(!token) return this.send(`You didn't provide a 'imdb' API key!`)
+                        if(!show) return this.send(`You didn't provide the tv-show or movie name!`);
+                        let res = await this.fetch(`/api/platform/imdb?token=${token}&show=${show}`);
+                        if(!res) return this.send(`Unable to fetch the imdb information, try again later.`);
                         return res;
                     }catch(err){
-                        return errorMsg(err.message);
+                        return this.send(err.message);
                     }
                 },
                 ytsearch: async (token, name, type = "video") => {
                     try{
-                        if(!token) return errorMsg(`You didn't provide a 'imdb' API key!`)
-                        if(!name) return errorMsg(`You didn't provide the name to search for!`);
+                        if(!token) return this.send(`You didn't provide a 'imdb' API key!`)
+                        if(!name) return this.send(`You didn't provide the name to search for!`);
                         if(!type) type = "video";
-                        let res = await getAPIResponse(`/api/platform/yt-search?token=${token}&name=${name}&type=${type}`);
-                        if(!res) return errorMsg(`Unable to fetch the ytsearch information, try again later.`);
+                        let res = await this.fetch(`/api/platform/yt-search?token=${token}&name=${name}&type=${type}`);
+                        if(!res) return this.send(`Unable to fetch the ytsearch information, try again later.`);
                         return res;
                     }catch(err){
-                        return errorMsg(err.message);
+                        return this.send(err.message);
                     }
                 },
                 picarto: async (nameOrID) => {
                     try{
-                        if(!nameOrID) return errorMsg(`You didn't provide a Picarto ID or name`);
-                        let res = await getAPIResponse(`/api/platform/picarto?search=${nameOrID}`);
-                        if(!res) return errorMsg(`Unable to fetch the Picarto information, try again later.`);
+                        if(!nameOrID) return this.send(`You didn't provide a Picarto ID or name`);
+                        let res = await this.fetch(`/api/platform/picarto?search=${nameOrID}`);
+                        if(!res) return this.send(`Unable to fetch the Picarto information, try again later.`);
                         return res;
                     }catch(err){
-                        return errorMsg(err.message);
+                        return this.send(err.message);
                     }
                 }
             }
-        };
-        this.automod = {
+        }
+    };
+
+    get automod() {
+        return {
             images: async (token, urls = [], percent = 89) => {
                 try{
-                    if(!token) return errorMsg(`You didn't provide a moderatecontent API Key!`);
-                    if(!Array.isArray(urls)) return errorMsg(`The "urls" you provided wasn't an array!`);
-                    if(urls.length === 0) return errorMsg(`You didn't provide images to check!`); 
-                    let res = await get(`${baseURL}/api/automod/images?token=${token}&percent=${percent}`).set({'key': key, "User-Agent": userAgent}).send({images: urls});
-                    if(res.status !== 200) return errorMsg(`I was unable to fetch the imagemod information.`);
-                    if(!res.body) return errorMsg(`Unknown error while trying to fetch the imagemod information from the API`);
-                    return res.body;
+                    if(!token) return this.send(`You didn't provide a moderatecontent API Key!`);
+                    if(!Array.isArray(urls)) return this.send(`The "urls" you provided wasn't an array!`);
+                    if(!urls.length) return this.send(`You didn't provide images to check!`); 
+                    let res = await this.fetch(`/api/automod/images?token=${token}&percent=${percent}`, { images: urls });
+                    if(!res) return this.send(`Unknown error while trying to fetch the imagemod information from the API`);
+                    return res;
                 }catch(err){
-                    return errorMsg(err.message);
+                    return this.send(err.message);
                 }
             },
-            words: async (message, filteredWords = [], filterEmojis = []) => {
+            words: async (message, words = [], emojis = []) => {
                 try{
-                    if(!message || message.toString().length === 0) return errorMsg(`You didn't provide a message`);
-                    let res = await get(`${baseURL}/api/automod/words`).set({'key': key, "User-Agent": userAgent}).send({
-                        message: message,
-                        words: filteredWords,
-                        emojis: filterEmojis
-                    });
-                    if(res.status !== 200) return errorMsg(`I couldn't fetch the API response`);
-                    if(!res.body) return errorMsg(`I was unable to fetch the API response`);
-                    if(res.body.status !== true) return errorMsg(res.body.message);
-                    return res.body;
+                    if(!message || message.toString().length === 0) return this.send(`You didn't provide a message`);
+                    let res = await this.fetch(`/api/automod/words`, { message, words, emojis });
+                    if(!res) return this.send(`I was unable to fetch the API response`);
+                    if(res.status !== true) return this.send(res.message);
+                    return res;
                 }catch(err){
-                    return errorMsg(err.message);
+                    return this.send(err.message);
                 }
             },
             links: async (message, options = {prefix: null, regexp: true}) => {
                 try{
-                    if(!message || message.toString().length === 0) return errorMsg(`You didn't provide a message.`);
-                    let res = await get(`${baseURL}/api/automod/links`).set({'key': key, "User-Agent": userAgent}).send({
-                        message: message,
-                        regexp: options.regexp,
-                        prefix: options.prefix
-                    });
-                    if(res.status !== 200) return errorMsg(`I was unable to fetch the API response.`);
-                    if(!res.body) return errorMsg(`I was unable to fetch the API response`);
-                    if(res.body.status !== true) return errorMsg(res.body.message);
-                    return res.body;
+                    if(!message || message.toString().length === 0) return this.send(`You didn't provide a message.`);
+                    let res = await this.fetch(`/api/automod/links`, { message, regexp: options.regexp, prefix: options.prefix })
+                    if(!res) return this.send(`I was unable to fetch the API response`);
+                    if(res.status !== true) return this.send(res.message);
+                    return res;
                 }catch(err){
-                    return errorMsg(err.message);
+                    return this.send(err.message);
                 }
             }
-        };
-        this.dev = {
+        }
+    };
+
+    get dev() {
+        return {
             blacklists: {
                 servers: async (id = "all", type = "list", data = {name: "", reason: "", mod: ""}) => {
                     try{
-                        if(!id) return errorMsg(`You didn't provide a Discord server ID!`);
+                        if(!id) return this.send(`You didn't provide a Discord server ID!`);
                         switch(type.toLowerCase()){
                             case "add":
-                                let ares = await getAPIResponse(`/dev/blacklists/servers?id=${id}&action=add&name=${encodeURIComponent(data.name)}&reason=${encodeURIComponent(data.reason)}&mod=${encodeURIComponent(data.mod)}`);
-                                if(!ares) return errorMsg(`I was unable to add the server to the blacklisted database!`);
+                                let ares = await this.fetch(`/dev/blacklists/servers?id=${id}&action=add&name=${encodeURIComponent(data.name)}&reason=${encodeURIComponent(data.reason)}&mod=${encodeURIComponent(data.mod)}`);
+                                if(!ares) return this.send(`I was unable to add the server to the blacklisted database!`);
                                 return ares;
                             break;
                             case "delete": case "remove":
-                                let dr = await getAPIResponse(`/dev/blacklists/servers?id=${id}&action=remove&name=${data.name}&reason=${encodeURIComponent(data.reason)}&mod=${encodeURIComponent(data.mod)}`);
-                                if(!dr) return errorMsg(`I was unable to remove the server to the blacklisted database!`);
+                                let dr = await this.fetch(`/dev/blacklists/servers?id=${id}&action=remove&name=${data.name}&reason=${encodeURIComponent(data.reason)}&mod=${encodeURIComponent(data.mod)}`);
+                                if(!dr) return this.send(`I was unable to remove the server to the blacklisted database!`);
                                 return dr;
                             break;
                             case "list":
-                            let ls = await getAPIResponse(`/dev/blacklists/servers?id=${id}`);
-                            if(!ls) return errorMsg(`I was unable to fetch the blacklisted servers.`);
+                            let ls = await this.fetch(`/dev/blacklists/servers?id=${id}`);
+                            if(!ls) return this.send(`I was unable to fetch the blacklisted servers.`);
                             return ls;
                             break;
                         }
                     }catch(err){
-                        return errorMsg(err.message);
+                        return this.send(err.message);
                     }
                 },
                 users: async (id = "all", type = "list", data = {username: "", tag: "", reason: "", mod: ""}) => {
                     try{
-                        if(!id) return errorMsg(`You didn't provide a Discord user ID!`);
+                        if(!id) return this.send(`You didn't provide a Discord user ID!`);
                         switch(type.toLowerCase()){
                             case "add":
-                                let ur = await getAPIResponse(`/dev/blacklists/users?id=${id}&action=add&username=${encodeURIComponent(data.username)}&tag=${encodeURIComponent(data.tag)}&reason=${encodeURIComponent(data.reason)}&mod=${encodeURIComponent(data.mod)}`);
-                                if(!ur) return errorMsg(`I was unable to add the user to the blacklisted database!`);
+                                let ur = await this.fetch(`/dev/blacklists/users?id=${id}&action=add&username=${encodeURIComponent(data.username)}&tag=${encodeURIComponent(data.tag)}&reason=${encodeURIComponent(data.reason)}&mod=${encodeURIComponent(data.mod)}`);
+                                if(!ur) return this.send(`I was unable to add the user to the blacklisted database!`);
                                 return ur;
                             break;
                             case "delete": case "remove":
-                                let ed = await getAPIResponse(`/dev/blacklists/users?id=${id}&action=remove&reason=${encodeURIComponent(data.reason)}&mod=${encodeURIComponent(data.mod)}`);
-                                if(!ed) return errorMsg(`I was unable to remove the user to the blacklisted database!`);
+                                let ed = await this.fetch(`/dev/blacklists/users?id=${id}&action=remove&reason=${encodeURIComponent(data.reason)}&mod=${encodeURIComponent(data.mod)}`);
+                                if(!ed) return this.send(`I was unable to remove the user to the blacklisted database!`);
                                 return ed;
                             break;
                             case "list":
-                            let lu = await getAPIResponse(`/dev/blacklists/users?id=${id}`);
-                            if(!lu) return errorMsg(`I was unable to fetch the blacklisted users.`);
+                            let lu = await this.fetch(`/dev/blacklists/users?id=${id}`);
+                            if(!lu) return this.send(`I was unable to fetch the blacklisted users.`);
                             return lu;
                             break;
                         }
                     }catch(err){
-                        return errorMsg(err.message);
+                        return this.send(err.message);
                     }
                 }
             }
         };
+    };
+
+    send(message = "", status = false) {
+        return { status, message };
     };
 };
