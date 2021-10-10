@@ -74,7 +74,7 @@ module.exports = class Services{
                 if(!content) return this.send(`You didn't provide any content to post to the pastebin API`);
                 if(typeof privatePaste !== "boolean") privatePaste = false;
                 let { body } = await post(`${this.baseURL}/bin/api`)
-                    .set({ 'key': key, "User-Agent": userAgent })
+                    .set({ 'key': this.key, "User-Agent": userAgent })
                     .send({ content, title, priv: privatePaste })
                     .catch(() => {});
                 if(!body) return this.send(`No response from the Pastebin API!`);
