@@ -1,6 +1,6 @@
 {
   "name": "elara-services",
-  "version": "2.0.1",
+  "version": "2.5.0",
   "description": "The Official Elara Services API Wrapper.",
   "main": "index.js",
   "types": "index.d.ts",
@@ -16,6 +16,6 @@
     "url": "git+https://github.com/Elara-Discord-Bots/Elara-Services.git"
   },
   "dependencies": {
-    "superagent": "^7.0.0"
+    "superagent": "7.0.0"
   }
 }
