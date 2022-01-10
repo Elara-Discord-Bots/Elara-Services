@@ -9,7 +9,7 @@ declare module "elara-services" {
     class Services {
         public constructor(key: string, baseURL?: string);
         private key: string;
-        private fetch(url: string, body?: object): Promise<object|null>;
+        private fetch(url: string, body?: object|undefined, useKey?: boolean, useBase?: boolean): Promise<object|null>;
         private send(message: string, status?: boolean): { status: boolean, message: string };
         public baseURL: string;
         public support: string;
@@ -52,7 +52,7 @@ declare module "elara-services" {
                 paladins(devID: string, auth: string, username: string, platform?: string): Promise<object|Status>;
                 imdb(token: string, show: string): Promise<object|Status>;
                 ytsearch(token: string, name: string, type?: string): Promise<object|Status>;
-                picarto(nameOrID): Promise<object|Status>;
+                picarto(nameOrID: string): Promise<object|Status>;
             }
         };
 

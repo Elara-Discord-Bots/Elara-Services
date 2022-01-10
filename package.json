@@ -16,6 +16,6 @@
     "url": "git+https://github.com/Elara-Discord-Bots/Elara-Services.git"
   },
   "dependencies": {
-    "superagent": "7.0.0"
+    "@elara-services/fetch": "^1.0.0"
   }
 }
