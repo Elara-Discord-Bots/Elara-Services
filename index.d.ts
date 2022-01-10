@@ -23,7 +23,7 @@ declare module "elara-services" {
 
         public paste: {
             get(id: string): Promise<object|Status>;
-            post(title?: string, content: string, privatePaste?: boolean): Promise<object|Status>;
+            post(title?: string, content?: string, privatePaste?: boolean): Promise<object|Status>;
         };
 
         public api: {
@@ -68,6 +68,7 @@ declare module "elara-services" {
                 users(id?: string, type?: string, data?: { username: string, tag: string, reason: string, mod: string }): Promise<object|Status>;
             }
         }
-    };
+    }
+    
     export = Services;
 }
