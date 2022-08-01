@@ -2,6 +2,7 @@ const userAgent = `Elara-Services (${require("./package.json").version}, https:/
       fetch = require("@elara-services/fetch");
 
 module.exports = class Services {
+    // TODO: Replace this with something else.
     constructor(key, baseURL = "https://my.elara.services"){
         if (!key) throw new Error(`You didn't provide an API key!`);
         if (typeof key !== "string") throw new Error(`The API key you provided isn't a string!`);
